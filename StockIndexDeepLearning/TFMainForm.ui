@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TFMainDlg</class>
+ <widget class="QDialog" name="TFMainDlg">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>801</width>
+    <height>211</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>딥러닝 수행</string>
+  </property>
+  <widget class="QTextEdit" name="edtTest">
+   <property name="geometry">
+    <rect>
+     <x>409</x>
+     <y>20</y>
+     <width>381</width>
+     <height>171</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="grpData">
+   <property name="geometry">
+    <rect>
+     <x>28</x>
+     <y>16</y>
+     <width>361</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>데이터송수신</string>
+   </property>
+   <widget class="QTextEdit" name="edtStat">
+    <property name="geometry">
+     <rect>
+      <x>183</x>
+      <y>19</y>
+      <width>104</width>
+      <height>31</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>20</y>
+      <width>31</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>상태:</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnRcvData">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>101</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>수신시작</string>
+    </property>
+   </widget>
+   <zorder>label</zorder>
+   <zorder>btnRcvData</zorder>
+   <zorder>edtStat</zorder>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>103</y>
+     <width>31</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>시작:</string>
+   </property>
+  </widget>
+  <widget class="QDateTimeEdit" name="dteStrDtMn">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>100</y>
+     <width>151</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QDateTimeEdit" name="dteEndDtMn">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>140</y>
+     <width>151</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>142</y>
+     <width>31</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>종료:</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="grpData_2">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>83</y>
+     <width>361</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>신경망학습</string>
+   </property>
+   <widget class="QCheckBox" name="chkInitSave">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>60</y>
+      <width>131</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>기존학습저장초기화</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnDoLearning">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>121</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>학습수행</string>
+    </property>
+   </widget>
+  </widget>
+  <zorder>grpData</zorder>
+  <zorder>grpData_2</zorder>
+  <zorder>edtTest</zorder>
+  <zorder>label_2</zorder>
+  <zorder>dteStrDtMn</zorder>
+  <zorder>dteEndDtMn</zorder>
+  <zorder>label_3</zorder>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
