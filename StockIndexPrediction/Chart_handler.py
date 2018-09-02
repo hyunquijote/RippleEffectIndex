@@ -184,7 +184,7 @@ class Chart_handler():
             Ax.set_yticks(self.Y_list, True)
 
             # 라벨설정
-            self.Fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=2, fancybox=True, shadow=True)
+            self.Fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=2, fancybox=True, shadow=True, fontsize = 'x-small')
             Ax.set_xlabel("Time")
             Ax.set_ylabel("Price")
 

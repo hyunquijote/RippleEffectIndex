@@ -83,11 +83,11 @@ class CodeDef():
     MKT_TP_CD_GLOBAL_OPTION        = "7"  # 해외 옵션
 
     # 최종 동기화 일자 기본
-    INIT_STR_DT_DEFAULT = "20180810"
+    INIT_STR_DT_DEFAULT = "20180813"
     INIT_STR_MN_DEFAULT = "1530"
     # 초기화종료일은 전날자정까지로 설정 ※ 추후 변경
     #INIT_END_DT_DEFAULT = (date.today() + timedelta(days=-1)).strftime("%Y%m%d")
-    INIT_END_DT_DEFAULT = "20180821"
+    INIT_END_DT_DEFAULT = "20180828"
     INIT_END_MN_DEFAULT = "1530"
 
     # 처리대상 종목테이블위젯 컬럼
@@ -155,22 +155,22 @@ class CodeDef():
     TF_LAYER_3_NEURON_CNT    = 8    # 3번째 은닉층 뉴런수
     TF_LAYER_4_NEURON_CNT    = 10   # 4번째 은닉층 뉴런수
 
-    TF_LEARNING_STR_DT = "20180720" # 학습대상 시작일
+    TF_LEARNING_STR_DT = "20180727" # 학습대상 시작일
     TF_LEARNING_STR_MN = "0900"      # 학습대상 시작시각(HHMM)
-    TF_LEARNING_END_DT = "20180820" # 학습대상 종료일
+    TF_LEARNING_END_DT = "20180827" # 학습대상 종료일
     TF_LEARNING_END_MN = "1519"      # 학습대상 종료시각(HHMM)
 
-    TF_TEST_STR_DT     = "20180821"  # 테스트 대상 시작일
+    TF_TEST_STR_DT     = "20180828"  # 테스트 대상 시작일
     TF_TEST_STR_MN     = "0900"       # 테스트 대상 시작시각(HHMM)
-    TF_TEST_END_DT     = "20180821"  # 테스트 대상 종료일
+    TF_TEST_END_DT     = "20180828"  # 테스트 대상 종료일
     TF_TEST_END_MN     = "1519"       # 테스트 대상 종료시각(HHMM)
 
-    TF_LEARNING_MN_LIST = [1, 5, 10, 30] # 학습 분 리스트(예측분) 첫번째는 1분 고정
+    #TF_LEARNING_MN_LIST = [1, 5, 10, 30] # 학습 분 리스트(예측분) 첫번째는 1분 고정
+    TF_LEARNING_MN_LIST = [10]  # 학습 분 리스트(예측분) 첫번째는 1분 고정
     #TF_LEARNING_MN_LIST = [1]  # 학습 분 리스트(예측분) 첫번째는 1분 고정
-
     TF_LEARNING_INPUT_CNT    = 11    # 학습 입력값 리스트 맴버수
     TF_LEARNING_OUTPUT_CNT   = 1     # 학습 출력값 리스트 맴버수
-    TF_LEARNING_DROPOUT_RATE = 0.8   # 드롭아웃률
+    TF_LEARNING_DROPOUT_RATE = 1.0   # 드롭아웃률
     TF_LEARNING_RATE         = 0.001 # 학습율
     TF_LEARNING_EPOCH        = 10    # 반복학습횟수
     TF_LEARNING_CNT          = 1000  # 학습 횟수
@@ -178,12 +178,15 @@ class CodeDef():
     TF_LEARNING_RNN_CELS_CNT = 128   # RNN 셀 갯수
     TF_LEARNING_RNN_STEP_CNT = 379   # RNN 입력 단계수 (하루치는 분봉으로 379분 09시00분~15시19분)
 
-    TF_LEARNING_SAVE_DIR     = ".\TrainingSave\Minute"     # 학습데이터 저장폴더
+    TF_LEARNING_SAVE_MAINDIR = ".\TrainingSave"              # 학습데이터 저장폴더
+    TF_LEARNING_SAVE_DIR     = ".\TrainingSave\Minute"      # 학습데이터 저장 분별폴더
     TF_LEARNING_SAVE_FILE    = "\TrainingCheckPoint.ckpt"  # 학습데이터 저장파일
     TF_LEARNING_LOG_DIR      = ".\TrainingLog"               # 학습로그 폴더
     TF_LEARNING_RSLT_FILE    = ".\LearningResult\LernRslt" # 학습테스트 결과저장 엑셀파일
+    TF_LEARNING_RSLT_DIR     = ".\LearningResult"            # 학습테스트 결과저장 폴더
 
-    TF_PREDICTION_SAVE_FILE  = ".\RealPrediction\RealPrediction.xlsx"  #실시간예측 결과저장 엑셀파일
+    TF_PREDICTION_SAVE_FILE  = ".\RealPrediction\RealPrediction.xlsx"  # 실시간예측 결과저장 엑셀파일
+    TF_PREDICTION_SAVE_DIR   = ".\RealPrediction"                         # 실시간예측 결과저장폴더
 
 
 

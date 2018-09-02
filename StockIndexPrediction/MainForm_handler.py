@@ -9,7 +9,8 @@ from TestQttn_Sender   import *
 from PyQt5             import uic
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-MainFormClass  = uic.loadUiType(r"C:\MyProject\StockIndexPrediction\MainForm.ui")[0]
+ui_path = os.path.dirname(os.path.abspath(__file__))
+MainFormClass = uic.loadUiType(os.path.join(ui_path, "MainForm.ui"))[0]
 
 # 메인 폼 핸들러
 class MainForm_handler(QMainWindow, MainFormClass):
@@ -59,16 +60,16 @@ class MainForm_handler(QMainWindow, MainFormClass):
         # API 핸들러 초기화
         try:
             self.APIH = GlobalAPI_handler()
-            self.APIH.initAPI(False,self) # 전송모드일 경우 True, 메인폼 수신 False
+            self.APIH.initAPI(False, self) # 전송모드일 경우 True, 메인폼 수신 False
             print("GLOBAL end ")
         except Exception as e:
             print("API초기화오류:",e)
 
         # 차트 초기화
-        self.fig = plt.Figure()
+        self.fig    = plt.Figure()
         self.canvas = FigureCanvas(self.fig)
         self.vbChart.addWidget(self.canvas)
-        self.CrtH = Chart_handler()
+        self.CrtH   = Chart_handler()
         self.CrtH.SetHandler(self.fig, self.canvas)
 
         # 처리대상 종목 초기화

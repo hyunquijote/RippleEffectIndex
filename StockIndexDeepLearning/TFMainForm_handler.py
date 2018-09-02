@@ -1,5 +1,6 @@
-import sys
-sys.path.insert(0, r'C:\\MyProject\\StockIndexPrediction')
+import sys, os
+import ctypes
+sys.path.insert(0, r'..\\StockIndexPrediction')
 from PyQt5.QtCore       import *
 from PyQt5              import uic, QtCore
 from PyQt5.QtWidgets    import *
@@ -7,9 +8,12 @@ from RcvSckt_handler    import *
 from SndSckt_handler    import *
 from TensorFlow_handler import *
 from CodeDef            import *
+from DB_handler         import *
 from openpyxl           import load_workbook, Workbook
 
-TFMainFormClass  = uic.loadUiType(r"C:\MyProject\StockIndexDeepLearning\TFMainForm.ui")[0]
+
+ui_path = os.path.dirname(os.path.abspath(__file__))
+TFMainFormClass = uic.loadUiType(os.path.join(ui_path, "TFMainForm.ui"))[0]
 
 class TFMainForm_handler(QDialog, TFMainFormClass):
 
@@ -47,11 +51,14 @@ class TFMainForm_handler(QDialog, TFMainFormClass):
         # 상태표시
         self.edtStat.setText("시작전")
 
-        # TensorFlow 핸들러 초기화
-        self.TFH = TensorFlow_handler(self)
+        # 필요폴더 확인 및 생성, 로그삭제
+        self.InitFolder()
 
         # DB 핸들러 초기화
         self.DBH = DB_handler()
+
+        # TensorFlow 핸들러 초기화
+        self.TFH = TensorFlow_handler(self,self.DBH)
 
         # 학습기간입력 초기화
         self.dteStrDtMn.setCalendarPopup(True)
@@ -109,8 +116,8 @@ class TFMainForm_handler(QDialog, TFMainFormClass):
 
         self.PredWrkSheet = self.PredSaveFile.active
         self.PredCellPos = 1
+        self.PredWrkSheet.cell(row=1, column=1, value=datetime.today().strftime("%Y%m%d"))
         if(NewRlstFile):
-            self.PredWrkSheet.cell(row=1, column=1, value=datetime.today().strftime("%Y%m%d"))
             self.PredWrkSheet.cell(row=2, column=1, value="Time")
             self.PredWrkSheet.cell(row=2, column=2, value="RealPrice")
             for idx in range(self.PredMnCnt):
@@ -243,21 +250,25 @@ class TFMainForm_handler(QDialog, TFMainFormClass):
 
     # 학습시작
     def ClickDoLearning(self):
+        try :
+            StrDtMn = self.dteStrDtMn.dateTime().toString("yyyyMMddhhmm")
+            EndDtMn = self.dteEndDtMn.dateTime().toString("yyyyMMddhhmm")
+            if(len(StrDtMn) != 12 or len(EndDtMn) != 12):
+                ctypes.windll.user32.MessageBoxW(0, "기간입력형식이 잘못되었습니다.", "입력오류", 0)
+                return None
 
-        StrDtMn = self.dteStrDtMn.dateTime().toString("yyyyMMddhhmm")
-        EndDtMn = self.dteEndDtMn.dateTime().toString("yyyyMMddhhmm")
-        if(len(StrDtMn) != 12 or len(EndDtMn) != 12):
-            ctypes.windll.user32.MessageBoxW(0, "기간입력형식이 잘못되었습니다.", "입력오류", 0)
-            return None
+            if (int(StrDtMn) >= int(EndDtMn)):
+                ctypes.windll.user32.MessageBoxW(0, "시작일시가 더 큽니다.", "입력오류", 0)
+                return None
 
-        if (int(StrDtMn) >= int(EndDtMn)):
-            ctypes.windll.user32.MessageBoxW(0, "시작일시가 더 큽니다.", "입력오류", 0)
-            return None
+            # 예측분별 학습
+            for idx in range(len(CodeDef.TF_LEARNING_MN_LIST)):
+                print(str(CodeDef.TF_LEARNING_MN_LIST[idx])+"분 예측 학습시작")
+                self.TFH.DoLearning(StrDtMn, EndDtMn, idx);
 
-        # 예측분별 학습
-        for idx in range(len(CodeDef.TF_LEARNING_MN_LIST)):
-            print(str(CodeDef.TF_LEARNING_MN_LIST[idx])+"분 예측 학습시작")
-            self.TFH.DoLearning(StrDtMn, EndDtMn, idx);
+            ctypes.windll.user32.MessageBoxW(0, "학습종료 및 테스트결과 저장완료", "학습종료", 0)
+        except Exception as e:
+            print("학습수행 클릭에러:", e)
 
         return None
 
@@ -304,6 +315,7 @@ class TFMainForm_handler(QDialog, TFMainFormClass):
             NextMn = self.GetNextMn(inMn, idx)
             if(int(NextMn) > 1519):
                 print("예측시간 오버 예측미수행 NextMn:",NextMn)
+                P_Value = 0.0
                 continue
             P_Value = self.TFH.DoPrediction(inPutX, idx); # list형 리턴
 
@@ -357,3 +369,38 @@ class TFMainForm_handler(QDialog, TFMainFormClass):
     # 학습저장초기화 체크박스 값 가져오기
     def GetInitSave(self):
         return self.chkInitSave.isChecked()
+
+    # 필요 폴더 확인 및 생성
+    def InitFolder(self):
+
+        # 학습테스트 결과폴더
+        if not os.path.exists(CodeDef.TF_LEARNING_RSLT_DIR):
+            os.mkdir(CodeDef.TF_LEARNING_RSLT_DIR)
+
+        # 학습로그 폴더
+        if not os.path.exists(CodeDef.TF_LEARNING_LOG_DIR):
+            os.mkdir(CodeDef.TF_LEARNING_LOG_DIR)
+
+        # 학습결과 폴더
+        if not os.path.exists(CodeDef.TF_LEARNING_SAVE_MAINDIR):
+            os.mkdir(CodeDef.TF_LEARNING_SAVE_MAINDIR)
+
+        # 학습결과 폴더 : 예측분별
+        for idx in range(len(CodeDef.TF_LEARNING_MN_LIST)):
+            Dir = CodeDef.TF_LEARNING_SAVE_DIR + str(CodeDef.TF_LEARNING_MN_LIST[idx])
+            if not os.path.exists(Dir):
+                os.mkdir(Dir)
+
+        # 실시간 예측결과 저장 폴더
+        if not os.path.exists(CodeDef.TF_PREDICTION_SAVE_DIR):
+            os.mkdir(CodeDef.TF_PREDICTION_SAVE_DIR)
+
+        # 로그파일삭제
+        FilePath = os.path.dirname(os.path.abspath(__file__)) + "\TrainingLog"
+        FileNmlist = None
+        for dirN, subDirN, fileN in os.walk(FilePath):
+            FileNmlist = fileN
+        for idx in range(len(FileNmlist)):
+            os.remove(FilePath + "\\" + FileNmlist[idx])
+
+        return None

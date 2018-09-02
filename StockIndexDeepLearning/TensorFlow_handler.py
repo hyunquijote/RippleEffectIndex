@@ -1,12 +1,9 @@
-import sys
-sys.path.insert(0, r'C:\\MyProject\\StockIndexPrediction')
-import os
+import sys, os
+sys.path.insert(0, r'..\\StockIndexPrediction')
 import tensorflow as tf
-import numpy      as np
 import pandas     as pd
 from   pandas     import DataFrame
 from   CodeDef    import *
-from   DB_handler import *
 
 
 # 딥러닝 수행 핸들러
@@ -17,10 +14,10 @@ class TensorFlow_handler:
 
     # 초기화
     # inMain   : 메인폼
-    def __init__(self, inMain):
+    def __init__(self, inMain, inDBH):
 
         # 객체변수 설정
-        self.DBH      = None   # DB 핸들러
+        self.DBH      = inDBH   # DB 핸들러
         self.MainForm = inMain  # 메인폼
 
         self.PredMnList = CodeDef.TF_LEARNING_MN_LIST  # 예측분 리스트
@@ -43,9 +40,6 @@ class TensorFlow_handler:
         # 세션리스트
         self.Sess = [None] * self.PredMnCnt
 
-        # DB 핸들러 초기화
-        self.DBH = DB_handler()
-
         # 기본신경망 구성
         if (self.LearingOption == "STD"):
             print("기본신경망 구성")
@@ -66,7 +60,7 @@ class TensorFlow_handler:
 
         # 기본신경망 구성
         if (self.LearingOption == "STD"):
-            #print("기본신경망 예측수행(inPredIdx):",inPredIdx)
+            print("기본신경망 예측수행("+ str(self.PredMnList[inPredIdx])+")")
             RsltV = self.Sess[inPredIdx].run([self.TModel], feed_dict={self.T_X: inData, self.KeepDrop:1.0})
             RsltV = self.SetYScaling(RsltV)
             #print("DoPrediction 결과:", type(RsltV[0]), RsltV)
@@ -112,17 +106,23 @@ class TensorFlow_handler:
 
                 # 입력데이터 재구성
                 TestDataSets     = self.GetInputDataSets( TestDataSets, inIdx)
+
                 # 테스트 입력값 엑셀저장(임시)
-                #self.SaveLearnDataToExcel(TestDataSets, self.LernRsltFile[inIdx]+"_test.xlsx")
+                self.SaveLearnDataToExcel(TestDataSets, self.LernRsltFile[inIdx]+"_test.xlsx")
                 TestDataSets     = TestDataSets.values
                 InTestDataSets   = TestDataSets[:, 1:].tolist()
                 RealRsltDataSets = TestDataSets[:, :1].tolist()
 
                 PredRsltDataSets = self.Sess[inIdx].run([self.TModel], feed_dict={self.T_X: InTestDataSets, self.KeepDrop:1.0})
                 PredRsltDataSets = self.SetYScaling(PredRsltDataSets)
+                print(PredRsltDataSets[:4])
+                # 테스트 결과값 엑셀 저장
+                RsltStrMn  = str(int(InTestDataSets[0+self.PredMnList[inIdx]][1])).zfill(4) # 예측시작시분
+                TimeDelta  = timedelta(minutes=1)
+                TmpDay     = datetime.today().replace(hour=int(RsltStrMn[:2]), minute=int(RsltStrMn[2:]))
+                RsltMnList = [(TmpDay + TimeDelta * idx).strftime("%H%M") for idx, data in enumerate(RealRsltDataSets)]
 
-                #print("예측값 엑셀 생성:", self.LernRsltFile[inIdx])
-                self.SaveRsltToExcel(RealRsltDataSets, PredRsltDataSets, self.LernRsltFile[inIdx])
+                self.SaveRsltToExcel(RealRsltDataSets, PredRsltDataSets, RsltMnList, self.LernRsltFile[inIdx])
 
             elif (self.LearingOption == "RNN_LSTM"):
                 print("RNN + LSTM 학습실행")
@@ -152,7 +152,7 @@ class TensorFlow_handler:
         RtrnDataSets = inDataSets
 
         # N분후 예상 학습(이미 들어온 데이터셋이 1분후 결과가 있는 데이터셋)
-        if (inIdx > 0):
+        if (self.PredMnList[inIdx] > 1):
             PredMn    = self.PredMnList[inIdx]
             # 일별 학습종료 시각 계산
             TimeDelta = timedelta(minutes=1)
@@ -194,20 +194,24 @@ class TensorFlow_handler:
     # 학습결과값 엑셀저장
     # inY      : 정답 Y (type: list)
     # inPY     : 예측 Y (type: list)
+    # inMn     : 예측시분 (type: list)
     # inFile   : 파일
-    def SaveRsltToExcel(self, inY, inPY, inFile):
+    def SaveRsltToExcel(self, inY, inPY, inMn, inFile):
 
         try:
-            Y  = DataFrame(inY, columns=["Real_Y"])
+            Y  = DataFrame(inY , columns=["Real_Y"])
             PY = DataFrame(inPY, columns=["Prediction_Y"])
+            MN = DataFrame(inMn, columns=["MN"])
 
-            AY = pd.merge(Y, PY, how="outer", left_index=True, right_index=True)
+            AY    = pd.merge(Y , PY, how="outer", left_index=True, right_index=True)
+            RsltY = pd.merge(AY, MN, how="outer", left_index=True, right_index=True)
+            RsltY.set_index("MN", inplace=True, drop=True)  # index 를 mn으로 변경
 
-            # print("합체:", AY.head())
+            print("합체:", RsltY.head())
 
             writer = pd.ExcelWriter(inFile, engine='xlsxwriter')
 
-            AY.to_excel(writer, sheet_name='Sheet1')
+            RsltY.to_excel(writer, sheet_name='Sheet1')
 
             writer.close()
 
@@ -244,9 +248,11 @@ class TensorFlow_handler:
     # inUniform : 균등분포사용여부
     def GetXavierInit(self, inInCnt, inOutCnt, inUniform=True):
         if inUniform:
+            print("균등분포사용")
             InitRange = tf.sqrt(6.0 / (inInCnt + inOutCnt))
             return tf.random_uniform_initializer(-InitRange, InitRange)
         else:
+            print("절단정규분포사용")
             Stddev = tf.sqrt(3.0 / (inInCnt + inOutCnt))
             return tf.truncated_normal_initializer(stddev=Stddev)
 
@@ -265,10 +271,14 @@ class TensorFlow_handler:
         # tf.layers.batch_normalization 사용을 고려해볼것 코딩순서는 batch_norm > relu > drop 순
 
         # 가중치변수 초기화
-        self.W1 = tf.get_variable("W1", shape=[CodeDef.TF_LEARNING_INPUT_CNT, CodeDef.TF_LAYER_1_NEURON_CNT ],initializer=self.GetXavierInit(CodeDef.TF_LEARNING_INPUT_CNT,CodeDef.TF_LAYER_1_NEURON_CNT ))
-        self.W2 = tf.get_variable("W2", shape=[CodeDef.TF_LAYER_1_NEURON_CNT, CodeDef.TF_LAYER_2_NEURON_CNT ],initializer=self.GetXavierInit(CodeDef.TF_LAYER_1_NEURON_CNT,CodeDef.TF_LAYER_2_NEURON_CNT ))
-        self.W3 = tf.get_variable("W3", shape=[CodeDef.TF_LAYER_2_NEURON_CNT, CodeDef.TF_LAYER_3_NEURON_CNT ],initializer=self.GetXavierInit(CodeDef.TF_LAYER_2_NEURON_CNT,CodeDef.TF_LAYER_3_NEURON_CNT ))
-        self.W4 = tf.get_variable("W4", shape=[CodeDef.TF_LAYER_3_NEURON_CNT, CodeDef.TF_LEARNING_OUTPUT_CNT],initializer=self.GetXavierInit(CodeDef.TF_LAYER_3_NEURON_CNT,CodeDef.TF_LEARNING_OUTPUT_CNT))
+        #self.W1 = tf.get_variable("W1", shape=[CodeDef.TF_LEARNING_INPUT_CNT, CodeDef.TF_LAYER_1_NEURON_CNT ],initializer=self.GetXavierInit(CodeDef.TF_LEARNING_INPUT_CNT,CodeDef.TF_LAYER_1_NEURON_CNT ))
+        #self.W2 = tf.get_variable("W2", shape=[CodeDef.TF_LAYER_1_NEURON_CNT, CodeDef.TF_LAYER_2_NEURON_CNT ],initializer=self.GetXavierInit(CodeDef.TF_LAYER_1_NEURON_CNT,CodeDef.TF_LAYER_2_NEURON_CNT ))
+        #self.W3 = tf.get_variable("W3", shape=[CodeDef.TF_LAYER_2_NEURON_CNT, CodeDef.TF_LAYER_3_NEURON_CNT ],initializer=self.GetXavierInit(CodeDef.TF_LAYER_2_NEURON_CNT,CodeDef.TF_LAYER_3_NEURON_CNT ))
+        #self.W4 = tf.get_variable("W4", shape=[CodeDef.TF_LAYER_3_NEURON_CNT, CodeDef.TF_LEARNING_OUTPUT_CNT],initializer=self.GetXavierInit(CodeDef.TF_LAYER_3_NEURON_CNT,CodeDef.TF_LEARNING_OUTPUT_CNT))
+        self.W1 = tf.get_variable("W1", shape=[CodeDef.TF_LEARNING_INPUT_CNT, CodeDef.TF_LAYER_1_NEURON_CNT ],initializer=tf.keras.initializers.he_normal())
+        self.W2 = tf.get_variable("W2", shape=[CodeDef.TF_LAYER_1_NEURON_CNT, CodeDef.TF_LAYER_2_NEURON_CNT ],initializer=tf.keras.initializers.he_normal())
+        self.W3 = tf.get_variable("W3", shape=[CodeDef.TF_LAYER_2_NEURON_CNT, CodeDef.TF_LAYER_3_NEURON_CNT ],initializer=tf.keras.initializers.he_normal())
+        self.W4 = tf.get_variable("W4", shape=[CodeDef.TF_LAYER_3_NEURON_CNT, CodeDef.TF_LEARNING_OUTPUT_CNT],initializer=tf.keras.initializers.he_normal())
 
         # 편향 초기화
         self.B1 = tf.Variable(tf.zeros([CodeDef.TF_LAYER_1_NEURON_CNT ], name="B1"))
@@ -347,14 +357,12 @@ class TensorFlow_handler:
             # 기존학습데이터 초기화여부 처리
             if(self.MainForm.GetInitSave()):
                 print("기존 저장 초기화수행:"+str(self.PredMnList[inIdx])+"분 예측용")
+                # 글로벌변수 초기화
                 self.Sess[inIdx].run(tf.global_variables_initializer())
 
             for epoch in range(CodeDef.TF_LEARNING_EPOCH):
                 # 학습시작
                 for step in range(CodeDef.TF_LEARNING_CNT):
-
-                    # self.Sess.run(self.TOption, feed_dict={self.T_X: self.L_data, self.R_Y: self.R_data, self.KeepDrop: CodeDef.TF_LEARNING_DROPOUT_RATE})
-                    # self.Sess.run(self.TOption, feed_dict={self.T_X: self.L_data, self.R_Y: self.R_data})
 
                     LernCost, _, _ = self.Sess[inIdx].run([self.TCost, self.TModel, self.TOption],
                                                           feed_dict={self.T_X: self.L_data, self.R_Y: self.R_data, self.KeepDrop: CodeDef.TF_LEARNING_DROPOUT_RATE})
@@ -368,21 +376,11 @@ class TensorFlow_handler:
                     self.TWriter[inIdx].add_summary(Summary, global_step=self.Sess[inIdx].run(self.TStep))
 
             # 결과저장
-            print("결과저장:", self.LernSaveFile[inIdx])
+            #print("결과저장:", self.LernSaveFile[inIdx])
             self.TSave[inIdx].save(self.Sess[inIdx], self.LernSaveFile[inIdx], global_step=self.TStep)
 
-            # 결과 보기
-            # 드로아웃 사용 print("예측값: ", self.Sess.run(Prediction, feed_dict={self.T_X: self.L_data, self.KeepDrop: 1}))
-            # 드로아웃 사용 print("실제값: ", self.Sess.run(Target    , feed_dict={self.R_Y: self.R_data, self.KeepDrop: 1}))
-
-            # self.R_Y = self.Sess.run([self.TModel], feed_dict={self.T_X: self.L_data})
-            # self.R_Y = self.SetYScaling(self.R_Y)
-
-            # print("예측값 엑셀 셍성:",CodeDef.TF_LEARNING_RSLT_FILE )
-            # self.SetToExcel(self.R_data, self.R_Y)
-
         except Exception as e:
-            print(e)
+            print("기본모델 학습에러:",e)
 
         return None
 

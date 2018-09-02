@@ -2,8 +2,10 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtCore
 from DB_handler import *
 import datetime
+import os
 
-InStkFormClass = uic.loadUiType(r"C:\MyProject\StockIndexPrediction\InStkForm.ui")[0]
+ui_path = os.path.dirname(os.path.abspath(__file__))
+InStkFormClass = uic.loadUiType(os.path.join(ui_path, "InStkForm.ui"))[0]
 
 # 처리대상 종목 입력 폼 핸들러
 class InStkForm_handler(QDialog, InStkFormClass):

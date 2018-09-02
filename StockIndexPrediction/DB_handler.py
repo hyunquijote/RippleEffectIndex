@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+import os
 from CodeDef import *
 
 class DB_handler:
@@ -11,8 +12,10 @@ class DB_handler:
         self.gDbh    = None
 
         # 초기화
-        self.db = sqlite3.connect(r"C:\MyProject\StockIndexPrediction\StockIndexPrediction.db")
+        DbFilePath = os.path.dirname(os.path.abspath(__file__))
+        self.db = sqlite3.connect(DbFilePath+"\StockIndexPrediction.db")
         self.cursor = self.db.cursor()
+
         return None
 
     # 소멸자
@@ -175,6 +178,7 @@ class DB_handler:
                                     "set LAST_DT_MN = ? "
                                     "where MKT_TP_CD = ? "
                                     "and   STK_CD = ? ", datas)
+            self.db.commit()
         except Exception as e:
             print("처리종목 초기화종료일자 업뎃(updateProcStkLastDtMn)에러:",e)
             return None

@@ -1,4 +1,4 @@
-import sys
+import sys, os
 import ctypes
 from PyQt5.QtCore      import *
 from TradarAPI_handler import *
@@ -8,7 +8,8 @@ from PyQt5.QtWidgets import *
 from SndSckt_handler import *
 from DB_handler import *
 
-SndIdxFormClass  = uic.loadUiType(r"C:\MyProject\StockIndexPrediction\RcvIdxForm.ui")[0]
+ui_path = os.path.dirname(os.path.abspath(__file__))
+SndIdxFormClass = uic.loadUiType(os.path.join(ui_path, "RcvIdxForm.ui"))[0]
 
 class SndIdxForm_handler(QDialog, SndIdxFormClass):
 
