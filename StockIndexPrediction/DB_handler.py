@@ -104,7 +104,8 @@ class DB_handler:
         try:
             self.cursor.executemany("delete from "+Table+" "
                                     "where STK_CD = ? "
-                                    "and   DT_MN between ? and ? ", datas)
+                                    "and   DT_MN > ? "
+                                    "and   DT_MN <= ? ", datas)
 
         except Exception as e:
             print("분봉삭제(deleteMnQttn)에러:",e)
@@ -246,7 +247,7 @@ class DB_handler:
         strSQL += SqlCond
         strSQL +="order by ksp.dt_mn "
 
-        #print(strSQL)
+        print(strSQL)
         outLernData = None
         try:
             outLernData = pd.read_sql(strSQL, self.db, index_col=None)

@@ -83,12 +83,12 @@ class CodeDef():
     MKT_TP_CD_GLOBAL_OPTION        = "7"  # 해외 옵션
 
     # 최종 동기화 일자 기본
-    INIT_STR_DT_DEFAULT = "20180813"
-    INIT_STR_MN_DEFAULT = "1530"
+    INIT_STR_DT_DEFAULT = "20180831"
+    INIT_STR_MN_DEFAULT = "0859"
     # 초기화종료일은 전날자정까지로 설정 ※ 추후 변경
     #INIT_END_DT_DEFAULT = (date.today() + timedelta(days=-1)).strftime("%Y%m%d")
-    INIT_END_DT_DEFAULT = "20180828"
-    INIT_END_MN_DEFAULT = "1530"
+    INIT_END_DT_DEFAULT = "20180831"
+    INIT_END_MN_DEFAULT = "1520"
 
     # 처리대상 종목테이블위젯 컬럼
     PROC_STK_COL_MKT_TP_CD = 0  # 시장구분
@@ -147,6 +147,8 @@ class CodeDef():
     CHART_COLORS  = ["r", "b", "g", "y", "m", "c", "w", "k"]                 # 차트 색상
 
     # ----------------------- 딥러닝 관련 ---------------------------
+    TF_LEARNING_ONEDAY_DATA_CNT = 379  # 하루 학습 데이터량 0901~1519 까지
+    
     TF_PREDICTION_INPUT_CNT  = 11   # 예측 입력값 리스트 맴버수
     TF_PREDICTION_OUTPUT_CNT = 1    # 예측 출력값 리스트 맴버수
 
@@ -154,6 +156,9 @@ class CodeDef():
     TF_LAYER_2_NEURON_CNT    = 15   # 2번째 은닉층 뉴런수
     TF_LAYER_3_NEURON_CNT    = 8    # 3번째 은닉층 뉴런수
     TF_LAYER_4_NEURON_CNT    = 10   # 4번째 은닉층 뉴런수
+
+    TF_LAYER_NEURON_CNT_LIST = [1024, 512, 256, 128] # 뉴런수 배열 (index순)
+    TF_LAYER_CNT             = 4                     # 은닉층수
 
     TF_LEARNING_STR_DT = "20180727" # 학습대상 시작일
     TF_LEARNING_STR_MN = "0900"      # 학습대상 시작시각(HHMM)

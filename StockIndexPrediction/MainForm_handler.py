@@ -187,6 +187,8 @@ class MainForm_handler(QMainWindow, MainFormClass):
                 UpdnPrc = 0.0
                 Vlum    = 0.0
                 PreQttn = []
+                Dt = None
+                Mn = None
                 for qIdx in range(QttnCnt):
                     Dt      = Qttn.iat[qIdx, CodeDef.QTTN_MN_DATA_COL_DT]
                     Mn      = Qttn.iat[qIdx, CodeDef.QTTN_MN_DATA_COL_MN]
@@ -230,8 +232,27 @@ class MainForm_handler(QMainWindow, MainFormClass):
                         PreQttn = [FtPrc, HgPrc, LoPrc, ClPrc, UpdnPrc, Vlum]
                         
                     # 빈분봉 채우기 if 끝
-
                 # 종목 시세 정리 for qIdx in range(QttnCnt): 끝
+
+                # 마지막 시세가 초기화 종료일까지 못갔을 경우 마지막을 채운다.
+                if(int(ProcDt.strftime("%Y%m%d%H%M")) < int(CodeDef.INIT_END_DT_DEFAULT+CodeDef.INIT_END_MN_DEFAULT)):
+
+                    EndDt = datetime(year=int(CodeDef.INIT_END_DT_DEFAULT[:4]), month=int(CodeDef.INIT_END_DT_DEFAULT[4:6]), day=int(CodeDef.INIT_END_DT_DEFAULT[6:]), hour=int(CodeDef.INIT_END_MN_DEFAULT[:2]),minute=int(CodeDef.INIT_END_MN_DEFAULT[2:4]))
+                    MnCnt = (EndDt - ProcDt).total_seconds() / 60.0
+
+                    for eIdx in range(int(MnCnt)+1):
+                        # 비는 시세 확인
+                        if (CodeDef.isQttnBlnk(self, ProcDt)):
+                            ProcDt = ProcDt + CodeDef.ONE_MINUTE
+                            continue
+                        if (int(ProcDt.strftime("%H%M")) > int(EndDt.strftime("%H%M"))):
+                            #print("ProcDt:",ProcDt,"EndDt:",EndDt)
+                            break
+
+                        self.DBH.insertMnQttn(MktTpCd, StkCd, ProcDt.strftime("%Y%m%d"), ProcDt.strftime("%H%M"),
+                                              PreQttn[0], PreQttn[1], PreQttn[2], PreQttn[3], PreQttn[4], PreQttn[5])
+                        ProcDt = ProcDt + CodeDef.ONE_MINUTE
+
             except Exception as e:
                 print("빈분봉처리에러:",e,StkCd)
                 return None
